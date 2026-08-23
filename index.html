@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartShelf | Discover Smarter. Read Better. Learn Faster.</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="enhancements.css">
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- ==================== PAGE LOADER ==================== -->
+    <div id="page-loader" class="page-loader" aria-label="Loading SmartShelf">
+        <div class="loader-content">
+            <div class="loader-logo">
+                <i class="fa-solid fa-book-open"></i>
+            </div>
+            <h2>SmartShelf</h2>
+            <p>Preparing your library...</p>
+            <div class="loader-track">
+                <div class="loader-progress"></div>
+            </div>
+            <span class="loader-percent">0%</span>
+        </div>
+    </div>
+
+
+    <!-- ==================== HEADER ==================== -->
+
+    <header>
+
+        <nav class="navbar">
+
+            <div class="logo">
+                <i class="fa-solid fa-book-open"></i>
+                <h2>SmartShelf</h2>
+            </div>
+
+            <ul class="nav-links">
+
+                <li><a href="index.html">Home</a></li>
+
+                <li><a href="catalog.html">Books</a></li>
+
+                <li><a href="about.html">About</a></li>
+
+                <li><a href="contact.html">Contact</a></li>
+
+            </ul>
+
+
+                <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark and light mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+
+            <div class="nav-btn">
+
+                <a href="login.html" class="login-btn">Sign In</a>
+
+                <a href="signup.html" class="signup-btn">Sign Up</a>
+
+            </div>
+
+        </nav>
+
+    </header>
+
+    <!-- ==================== HERO SECTION ==================== -->
+
+    <main>
+
+        <section class="hero">
+
+            <div class="hero-left">
+
+                <span class="tag">
+                    Smart Digital Library
+                </span>
+
+                <h1>
+                    Discover Smarter.
+                    <br>
+                    Read Better.
+                    <br>
+                    Learn Faster.
+                </h1>
+
+                <p>
+
+                    SmartShelf is a modern university digital library
+                    designed for students, librarians and staff.
+                    Search, discover and manage thousands of books
+                    with an intuitive and beautiful experience.
+
+                </p>
+
+                <div class="hero-buttons">
+
+                    <button class="primary-btn" onclick="location.href='catalog.html'">
+
+                        Explore Library
+
+                    </button>
+
+                    <button class="secondary-btn" onclick="location.href='catalog.html?trend=1'">
+
+                        Browse Trending
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="hero-right">
+
+                <img src="backgroundimg.png.jpeg"
+                    alt="Digital Library">
+
+            </div>
+
+        </section>
+
+        <!-- ================= SEARCH ================= -->
+
+        <section class="search-section">
+
+            <div class="search-box">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input type="text" id="homeSearchInput"
+                    placeholder="Search books, author or ISBN">
+
+                <button onclick="const q=document.getElementById('homeSearchInput').value; location.href='catalog.html'+(q?'?q='+encodeURIComponent(q):'')">
+
+                    Search
+
+                </button>
+
+            </div>
+
+        </section>
+        
+
+<section class="categories">
+
+
+
+    <div class="section-title">
+
+
+
+        <h2>Popular Subjects</h2>
+
+        <p>Browse books by academic subjects</p>
+
+
+
+    </div>
+
+
+
+    <div class="category-container" id="categoryContainer">
+        <!-- Rendered dynamically from data.js GENRES -->
+    </div>
+
+
+
+</section>
+
+<!-- ================= FEATURED BOOKS ================= -->
+
+
+
+<section class="featured-books">
+
+
+
+    <div class="section-title">
+
+
+
+        <h2>Featured Books</h2>
+
+
+
+        <p>Recommended books for Computer Science students</p>
+
+
+
+    </div>
+
+
+
+    <div class="book-container" id="featuredBooksContainer">
+        <!-- Rendered dynamically from data.js BOOKS -->
+    </div>
+
+</section>
+
+<!-- ================= TRENDING NOW ================= -->
+
+<section class="trending-section">
+
+    <div class="section-title">
+        <h2>🔥 Trending Among Students</h2>
+        <p>Popular academic and skill-building reads on campus</p>
+    </div>
+
+    <div class="trend-tags">
+        <span class="trend-tag hot">#StudySkills</span>
+        <span class="trend-tag">Artificial Intelligence</span>
+        <span class="trend-tag">Machine Learning</span>
+        <span class="trend-tag">Academic Research</span>
+        <span class="trend-tag hot">Exam Preparation</span>
+        <span class="trend-tag">Student Productivity</span>
+    </div>
+
+    <div class="book-container" id="trendingBooksContainer">
+        <!-- Rendered dynamically from data.js BOOKS (trending: true) -->
+    </div>
+
+    <div class="section-cta" style="text-align:center; margin-top:40px;">
+        <button class="primary-btn" onclick="location.href='catalog.html?trend=1'">See All Trending Books</button>
+    </div>
+
+</section>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-about">
+                <div class="logo">
+                    <i class="fa-solid fa-book-open"></i>
+                    <h2>SmartShelf</h2>
+                </div>
+                <h4 style="margin:14px 0 8px;">About Us</h4>
+                <p>A modern digital library for students, librarians and staff — search, borrow and manage books in one place.</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fa-brands fa-github"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="catalog.html">All Books</a></li>
+                    <li><a href="catalog.html?trend=1">Trending Now</a></li>
+                    <li><a href="catalog.html?filter=new">New Arrivals</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Account</h4>
+                <ul>
+                    <li><a href="login.html">Sign In</a></li>
+                    <li><a href="signup.html">Create Account</a></li>
+                    <li><a href="dashboard.html">My Dashboard</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="about.html">FAQs</a></li>
+                    <li><a href="#">Library Hours</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 SmartShelf. Built for students, by students.</p>
+            <p class="footer-credit">Crafted with 📚 by <strong>Yashasvi</strong>, <strong>Aafreen</strong> &amp; <strong>Bhumika</strong></p>
+        </div>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // ---- Popular Subjects (dynamic from GENRES) ----
+            const catContainer = document.getElementById("categoryContainer");
+            if (catContainer) {
+                const books = getAllBooks();
+                catContainer.innerHTML = Object.entries(GENRES).map(([key, g]) => {
+                    const count = books.filter(b => b.genre === key).length;
+                    return `
+                    <div class="category-card" onclick="location.href='catalog.html?genre=${key}'">
+                        <i class="${g.icon}" style="color:${g.color1}"></i>
+                        <h3>${g.label}</h3>
+                        <p>${count} Books</p>
+                    </div>`;
+                }).join("");
+            }
+
+            // ---- Featured Books (first 4 non-trending) ----
+            const featuredContainer = document.getElementById("featuredBooksContainer");
+            if (featuredContainer) {
+                const books = getAllBooks().filter(b => !b.trending).slice(0, 4);
+                featuredContainer.innerHTML = books.map(bookCardHTML).join("");
+            }
+
+            // ---- Trending Now (Gen-Z picks) ----
+            const trendContainer = document.getElementById("trendingBooksContainer");
+            if (trendContainer) {
+                const books = getAllBooks().filter(b => b.trending);
+                trendContainer.innerHTML = books.map(bookCardHTML).join("");
+            }
+
+            const loader = document.getElementById("page-loader");
+            const progress = document.querySelector(".loader-progress");
+            const percent = document.querySelector(".loader-percent");
+            const menuToggle = document.querySelector(".menu-toggle");
+            const navLinks = document.querySelector(".nav-links");
+
+            let value = 0;
+            const timer = setInterval(() => {
+                value += Math.floor(Math.random() * 8) + 3;
+                if (value >= 100) {
+                    value = 100;
+                    clearInterval(timer);
+                }
+                progress.style.width = value + "%";
+                percent.textContent = value + "%";
+            }, 55);
+
+            window.addEventListener("load", () => {
+                setTimeout(() => {
+                    progress.style.width = "100%";
+                    percent.textContent = "100%";
+                    loader.classList.add("loader-hidden");
+                    document.body.classList.add("page-ready");
+                }, 250);
+            });
+
+            if (menuToggle && navLinks) {
+                menuToggle.addEventListener("click", () => {
+                    const isOpen = navLinks.classList.toggle("nav-open");
+                    menuToggle.setAttribute("aria-expanded", isOpen);
+                    menuToggle.innerHTML = isOpen
+                        ? '<i class="fa-solid fa-xmark"></i>'
+                        : '<i class="fa-solid fa-bars"></i>';
+                });
+
+                navLinks.querySelectorAll("a").forEach(link => {
+                    link.addEventListener("click", () => {
+                        navLinks.classList.remove("nav-open");
+                        menuToggle.setAttribute("aria-expanded", "false");
+                        menuToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+                    });
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

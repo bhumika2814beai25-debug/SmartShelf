@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | SmartShelf</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="enhancements.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fa-solid fa-book-open"></i>
+                <h2>SmartShelf</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="catalog.html">Books</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark and light mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="nav-btn">
+                <a href="login.html" class="login-btn">Sign In</a>
+                <a href="signup.html" class="signup-btn">Sign Up</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="auth-wrap">
+            <div class="auth-card">
+                <div class="logo">
+                    <i class="fa-solid fa-book-open"></i>
+                    <h2>SmartShelf</h2>
+                </div>
+                <h1>Welcome back</h1>
+                <p class="subtitle" id="loginSubtitle">Sign in to borrow books and track your loans</p>
+
+                <div class="role-switch" role="group" aria-label="Choose account type">
+                    <button type="button" class="role-option is-selected" data-role="student" aria-pressed="true">
+                        <i class="fa-solid fa-graduation-cap"></i><span>Student</span><small>Borrow &amp; learn</small>
+                    </button>
+                    <button type="button" class="role-option" data-role="admin" aria-pressed="false">
+                        <i class="fa-solid fa-book-open-reader"></i><span>Librarian</span><small>Manage collection</small>
+                    </button>
+                    <button type="button" class="role-option" data-role="staff" aria-pressed="false">
+                        <i class="fa-solid fa-user-tie"></i><span>Staff</span><small>Support library work</small>
+                    </button>
+                </div>
+
+                <div class="role-hint" id="roleHint">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Students can search the academic catalog, borrow books and monitor due dates.</span>
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="email" placeholder="you@university.edu" required>
+                        <div class="form-error">Please enter a valid email.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                        <div class="form-error">Incorrect email or password.</div>
+                        <div style="text-align:right; margin-top:8px;">
+                            <a href="forgot-password.html" style="color:#60A5FA; font-size:13px; font-weight:600;">Forgot password?</a>
+                        </div>
+                    </div>
+                    <button type="submit" id="loginSubmit">Sign In as Student</button>
+                </form>
+
+                <div class="auth-footer">
+                    Don't have an account? <a href="signup.html">Create one</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Redirect already-logged-in users
+        if (currentUser()) {
+            location.href = currentUser().role === "admin" ? "admin.html" : "dashboard.html";
+        }
+
+        let selectedRole = "student";
+        const roleCopy = {
+            student: { subtitle: "Sign in to borrow books and track your loans", hint: "Students can search the academic catalog, borrow books and monitor due dates.", button: "Sign In as Student" },
+            admin: { subtitle: "Sign in to organize books and manage the collection", hint: "Librarians can add titles, update copies and keep the university catalog current.", button: "Open Librarian Panel" },
+            staff: { subtitle: "Sign in to support day-to-day library work", hint: "Staff can access SmartShelf with their staff account and help support library operations.", button: "Sign In as Staff" }
+        };
+        document.querySelectorAll(".role-option").forEach(option => option.addEventListener("click", () => {
+            selectedRole = option.dataset.role;
+            document.querySelectorAll(".role-option").forEach(item => {
+                const selected = item === option;
+                item.classList.toggle("is-selected", selected);
+                item.setAttribute("aria-pressed", selected);
+            });
+            document.getElementById("loginSubtitle").textContent = roleCopy[selectedRole].subtitle;
+            document.querySelector("#roleHint span").textContent = roleCopy[selectedRole].hint;
+            document.getElementById("loginSubmit").textContent = roleCopy[selectedRole].button;
+            if (selectedRole === "admin") {
+                document.getElementById("email").placeholder = "admin@admin.smartshelf";
+                document.getElementById("password").placeholder = "Demo password: admin123";
+            } else {
+                document.getElementById("email").placeholder = "you@university.edu";
+                document.getElementById("password").placeholder = "Your password";
+            }
+        }));
+
+        document.getElementById("loginForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const emailGroup = document.getElementById("email").closest(".form-group");
+            const passGroup = document.getElementById("password").closest(".form-group");
+            emailGroup.classList.remove("has-error");
+            passGroup.classList.remove("has-error");
+
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            const result = login(email, password, selectedRole);
+            if (!result.ok) {
+                passGroup.classList.add("has-error");
+                toast(result.error, "error");
+                return;
+            }
+            toast(`Welcome back, ${result.user.name.split(" ")[0]}!`, "success");
+            setTimeout(() => location.href = result.user.role === "admin" ? "admin.html" : "dashboard.html", 700);
+        });
+
+        const menuToggle = document.querySelector(".menu-toggle");
+        const navLinks = document.querySelector(".nav-links");
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener("click", () => {
+                const isOpen = navLinks.classList.toggle("nav-open");
+                menuToggle.setAttribute("aria-expanded", isOpen);
+                menuToggle.innerHTML = isOpen ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+            });
+        }
+    </script>
+
+</body>
+</html>

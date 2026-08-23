@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Details | SmartShelf</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="enhancements.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fa-solid fa-book-open"></i>
+                <h2>SmartShelf</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="catalog.html">Books</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark and light mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="nav-btn">
+                <a href="login.html" class="login-btn">Sign In</a>
+                <a href="signup.html" class="signup-btn">Sign Up</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="details-wrap" id="detailsWrap">
+            <!-- Rendered by JS -->
+        </div>
+
+        <div class="catalog-grid" id="relatedGrid" style="width:90%; max-width:1100px; margin:0 auto 100px;"></div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-about">
+                <div class="logo">
+                    <i class="fa-solid fa-book-open"></i>
+                    <h2>SmartShelf</h2>
+                </div>
+                <h4 style="margin:14px 0 8px;">About Us</h4>
+                <p>A modern digital library for students, librarians and staff — search, borrow and manage books in one place.</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fa-brands fa-github"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="catalog.html">All Books</a></li>
+                    <li><a href="catalog.html?trend=1">Trending Now</a></li>
+                    <li><a href="catalog.html?filter=new">New Arrivals</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Account</h4>
+                <ul>
+                    <li><a href="login.html">Sign In</a></li>
+                    <li><a href="signup.html">Create Account</a></li>
+                    <li><a href="dashboard.html">My Dashboard</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="about.html">FAQs</a></li>
+                    <li><a href="#">Library Hours</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 SmartShelf. Built for students, by students.</p>
+            <p class="footer-credit">Crafted with 📚 by <strong>Yashasvi</strong>, <strong>Aafreen</strong> &amp; <strong>Bhumika</strong></p>
+        </div>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+    <script>
+        const params = new URLSearchParams(location.search);
+        const id = params.get("id");
+        const book = getAllBooks().find(b => b.id === id);
+        const wrap = document.getElementById("detailsWrap");
+
+        if (!book) {
+            wrap.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+                <i class="fa-solid fa-book-skull"></i>
+                <h3>Book not found</h3>
+                <p>This title may have been removed. <a href="catalog.html" style="color:#60A5FA;">Browse the catalog</a> instead.</p>
+            </div>`;
+        } else {
+            const g = genreOf(book);
+            trackRecentView(book.id);
+            const user = currentUser();
+            const alreadyBorrowed = user && getBorrowRecords().some(r => r.bookId === book.id && r.email === user.email && !r.returned);
+            const available = book.available > 0;
+
+            wrap.innerHTML = `
+                <div class="details-cover" style="background:linear-gradient(135deg, ${g.color1}, ${g.color2})">
+                    <i class="${g.icon}"></i>
+                </div>
+                <div class="details-info">
+                    <span class="subject">${g.label}</span>
+                    <h1>${book.title}</h1>
+                    <p class="author">by ${book.author}</p>
+                    <div class="details-meta">
+                        <div><span>Rating</span><span>⭐ ${book.rating} / 5</span></div>
+                        <div><span>Year</span><span>${book.year || "—"}</span></div>
+                        <div><span>Pages</span><span>${book.pages || "—"}</span></div>
+                        <div><span>Copies</span><span>${book.available} / ${book.copies} available</span></div>
+                    </div>
+                    <p class="desc">${book.desc}</p>
+                    <div class="details-actions">
+                        ${alreadyBorrowed
+                            ? `<button class="primary-btn" disabled style="opacity:.6; cursor:not-allowed;"><i class="fa-solid fa-check"></i> Already Borrowed</button>`
+                            : available
+                                ? `<button class="primary-btn" id="borrowBtn"><i class="fa-solid fa-book"></i> Borrow This Book</button>`
+                                : `<button class="reserve-btn ${isReserved(book.id) ? "active" : ""}" id="reserveBtn"><i class="fa-solid fa-bookmark"></i> ${isReserved(book.id) ? "Reserved" : "Reserve This Book"}</button>`
+                        }
+                        <button class="details-wishlist-btn ${isWishlisted(book.id) ? "active" : ""}" id="detailsWishlistBtn" data-wishlist-id="${book.id}">
+                            <i class="fa-solid fa-heart"></i> <span id="wishlistBtnLabel">${isWishlisted(book.id) ? "Saved" : "Save for Later"}</span>
+                        </button>
+                        <button class="secondary-btn" onclick="history.back()">Back</button>
+                    </div>
+                </div>
+            `;
+
+            const borrowBtn = document.getElementById("borrowBtn");
+            if (borrowBtn) {
+                borrowBtn.addEventListener("click", () => {
+                    if (!currentUser()) { toast("Please sign in to borrow a book.", "error"); setTimeout(() => location.href = "login.html", 900); return; }
+                    if (borrowBook(book.id)) setTimeout(() => location.href = "dashboard.html", 900);
+                });
+            }
+
+            const wishlistBtn = document.getElementById("detailsWishlistBtn");
+            if (wishlistBtn) {
+                wishlistBtn.addEventListener("click", () => {
+                    const nowSaved = toggleWishlist(book.id);
+                    wishlistBtn.classList.toggle("active", nowSaved);
+                    document.getElementById("wishlistBtnLabel").textContent = nowSaved ? "Saved" : "Save for Later";
+                });
+            }
+
+            const reserveBtn = document.getElementById("reserveBtn");
+            if (reserveBtn) {
+                reserveBtn.addEventListener("click", () => {
+                    const nowReserved = toggleReservation(book.id);
+                    reserveBtn.classList.toggle("active", nowReserved);
+                    reserveBtn.innerHTML = `<i class="fa-solid fa-bookmark"></i> ${nowReserved ? "Reserved" : "Reserve This Book"}`;
+                });
+            }
+
+            // Related books (same genre, excluding this one)
+            const related = getAllBooks().filter(b => b.genre === book.genre && b.id !== book.id).slice(0, 3);
+            const relatedGrid = document.getElementById("relatedGrid");
+            if (related.length) {
+                relatedGrid.innerHTML = `<h2 class="related-heading" style="grid-column:1/-1;">More in ${g.label}</h2>` + related.map(bookCardHTML).join("");
+            }
+        }
+
+        const menuToggle = document.querySelector(".menu-toggle");
+        const navLinks = document.querySelector(".nav-links");
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener("click", () => {
+                const isOpen = navLinks.classList.toggle("nav-open");
+                menuToggle.setAttribute("aria-expanded", isOpen);
+                menuToggle.innerHTML = isOpen ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+            });
+            navLinks.querySelectorAll("a").forEach(link => {
+                link.addEventListener("click", () => {
+                    navLinks.classList.remove("nav-open");
+                    menuToggle.setAttribute("aria-expanded", "false");
+                    menuToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+                });
+            });
+        }
+    </script>
+
+</body>
+</html>

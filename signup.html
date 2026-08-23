@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | SmartShelf</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="enhancements.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fa-solid fa-book-open"></i>
+                <h2>SmartShelf</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="catalog.html">Books</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark and light mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="nav-btn">
+                <a href="login.html" class="login-btn">Sign In</a>
+                <a href="signup.html" class="signup-btn">Sign Up</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="auth-wrap">
+            <div class="auth-card">
+                <div class="logo">
+                    <i class="fa-solid fa-book-open"></i>
+                    <h2>SmartShelf</h2>
+                </div>
+                <h1>Create your account</h1>
+                <p class="subtitle">Join SmartShelf to start borrowing books today</p>
+
+                <div class="role-switch" role="group" aria-label="Choose account type">
+                    <button type="button" class="role-option is-selected" data-role="student" aria-pressed="true">
+                        <i class="fa-solid fa-graduation-cap"></i><span>Student</span><small>Borrow &amp; learn</small>
+                    </button>
+                    <button type="button" class="role-option" data-role="admin" aria-pressed="false">
+                        <i class="fa-solid fa-book-open-reader"></i><span>Librarian</span><small>Manage collection</small>
+                    </button>
+                    <button type="button" class="role-option" data-role="staff" aria-pressed="false">
+                        <i class="fa-solid fa-user-tie"></i><span>Staff</span><small>Support library work</small>
+                    </button>
+                </div>
+
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="name" placeholder="Your full name" required>
+                        <div class="form-error">Please enter your name.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="email" placeholder="you@university.edu" required>
+                        <div class="form-error">An account with this email already exists.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="password" placeholder="At least 6 characters" required minlength="6">
+                        <div class="form-error">Password must be at least 6 characters.</div>
+                    </div>
+                    <button type="submit">Create Account</button>
+                </form>
+
+                <div class="auth-footer">
+                    Already have an account? <a href="login.html">Sign in</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+    <script>
+        if (currentUser()) {
+            location.href = currentUser().role === "admin" ? "admin.html" : "dashboard.html";
+        }
+
+        let selectedRole = "student";
+        document.querySelectorAll(".role-option").forEach(option => option.addEventListener("click", () => {
+            selectedRole = option.dataset.role;
+            document.querySelectorAll(".role-option").forEach(item => {
+                const selected = item === option;
+                item.classList.toggle("is-selected", selected);
+                item.setAttribute("aria-pressed", selected);
+            });
+        }));
+
+        document.getElementById("signupForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const nameGroup = document.getElementById("name").closest(".form-group");
+            const emailGroup = document.getElementById("email").closest(".form-group");
+            const passGroup = document.getElementById("password").closest(".form-group");
+            [nameGroup, emailGroup, passGroup].forEach(g => g.classList.remove("has-error"));
+
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            if (!name) { nameGroup.classList.add("has-error"); return; }
+            if (password.length < 6) { passGroup.classList.add("has-error"); return; }
+
+            const result = signup(name, email, password, selectedRole);
+            if (!result.ok) {
+                emailGroup.classList.add("has-error");
+                toast(result.error, "error");
+                return;
+            }
+            toast(`Account created! Welcome, ${name.split(" ")[0]}.`, "success");
+            setTimeout(() => location.href = result.user.role === "admin" ? "admin.html" : "dashboard.html", 700);
+        });
+
+        const menuToggle = document.querySelector(".menu-toggle");
+        const navLinks = document.querySelector(".nav-links");
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener("click", () => {
+                const isOpen = navLinks.classList.toggle("nav-open");
+                menuToggle.setAttribute("aria-expanded", isOpen);
+                menuToggle.innerHTML = isOpen ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+            });
+        }
+    </script>
+
+</body>
+</html>

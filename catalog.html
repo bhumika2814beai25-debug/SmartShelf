@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Books | SmartShelf</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="enhancements.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fa-solid fa-book-open"></i>
+                <h2>SmartShelf</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="catalog.html">Books</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark and light mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="nav-btn">
+                <a href="login.html" class="login-btn">Sign In</a>
+                <a href="signup.html" class="signup-btn">Sign Up</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="page-hero">
+            <h1>Browse the Full Collection</h1>
+            <p>Search across every subject, filter by availability, or jump straight to what's trending on campus.</p>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-group" style="flex:1; min-width:220px;">
+                <label>Search</label>
+                <input type="text" id="searchInput" placeholder="Title, author or keyword...">
+            </div>
+            <div class="filter-group">
+                <label>Genre</label>
+                <select id="genreFilter">
+                    <option value="">All Genres</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Availability</label>
+                <select id="availFilter">
+                    <option value="">All Books</option>
+                    <option value="available">Available Now</option>
+                    <option value="trending">🔥 Trending</option>
+                    <option value="new">✨ New Arrivals</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Sort By</label>
+                <select id="sortFilter">
+                    <option value="title">Title (A-Z)</option>
+                    <option value="rating">Highest Rated</option>
+                    <option value="year">Newest First</option>
+                </select>
+            </div>
+            <button class="filter-reset" id="resetBtn">Reset</button>
+            <span class="filter-count" id="resultCount">0 books found</span>
+        </div>
+
+        <div class="catalog-grid" id="catalogGrid"></div>
+
+        <div class="empty-state" id="emptyState" style="display:none;">
+            <i class="fa-solid fa-book-skull"></i>
+            <h3>No books match your filters</h3>
+            <p>Try a different search term or reset your filters.</p>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-about">
+                <div class="logo">
+                    <i class="fa-solid fa-book-open"></i>
+                    <h2>SmartShelf</h2>
+                </div>
+                <h4 style="margin:14px 0 8px;">About Us</h4>
+                <p>A modern digital library for students, librarians and staff — search, borrow and manage books in one place.</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fa-brands fa-github"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="catalog.html">All Books</a></li>
+                    <li><a href="catalog.html?trend=1">Trending Now</a></li>
+                    <li><a href="catalog.html?filter=new">New Arrivals</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Account</h4>
+                <ul>
+                    <li><a href="login.html">Sign In</a></li>
+                    <li><a href="signup.html">Create Account</a></li>
+                    <li><a href="dashboard.html">My Dashboard</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="about.html">FAQs</a></li>
+                    <li><a href="#">Library Hours</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 SmartShelf. Built for students, by students.</p>
+            <p class="footer-credit">Crafted with 📚 by <strong>Yashasvi</strong>, <strong>Aafreen</strong> &amp; <strong>Bhumika</strong></p>
+        </div>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+    <script>
+        const params = new URLSearchParams(location.search);
+        const genreSelect = document.getElementById("genreFilter");
+        const searchInput = document.getElementById("searchInput");
+        const availFilter = document.getElementById("availFilter");
+        const sortFilter = document.getElementById("sortFilter");
+        const grid = document.getElementById("catalogGrid");
+        const emptyState = document.getElementById("emptyState");
+        const resultCount = document.getElementById("resultCount");
+
+        Object.entries(GENRES).forEach(([key, g]) => {
+            const opt = document.createElement("option");
+            opt.value = key;
+            opt.textContent = g.label;
+            genreSelect.appendChild(opt);
+        });
+
+        if (params.get("q")) searchInput.value = params.get("q");
+        if (params.get("genre")) genreSelect.value = params.get("genre");
+        if (params.get("trend")) availFilter.value = "trending";
+        if (params.get("filter") === "new") availFilter.value = "new";
+
+        function render() {
+            let books = getAllBooks();
+            const q = searchInput.value.trim().toLowerCase();
+            const genre = genreSelect.value;
+            const avail = availFilter.value;
+            const sort = sortFilter.value;
+
+            if (q) books = books.filter(b => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q));
+            if (genre) books = books.filter(b => b.genre === genre);
+            if (avail === "available") books = books.filter(b => b.available > 0);
+            if (avail === "trending") books = books.filter(b => b.trending);
+            if (avail === "new") books = books.filter(b => b.isNew);
+
+            if (sort === "title") books = [...books].sort((a, b) => a.title.localeCompare(b.title));
+            if (sort === "rating") books = [...books].sort((a, b) => b.rating - a.rating);
+            if (sort === "year") books = [...books].sort((a, b) => (b.year || 0) - (a.year || 0));
+
+            resultCount.textContent = `${books.length} book${books.length !== 1 ? "s" : ""} found`;
+
+            if (books.length === 0) {
+                grid.style.display = "none";
+                emptyState.style.display = "block";
+            } else {
+                grid.style.display = "grid";
+                emptyState.style.display = "none";
+                grid.innerHTML = books.map(bookCardHTML).join("");
+            }
+        }
+
+        [searchInput].forEach(el => el.addEventListener("input", render));
+        [genreSelect, availFilter, sortFilter].forEach(el => el.addEventListener("change", render));
+
+        document.getElementById("resetBtn").addEventListener("click", () => {
+            searchInput.value = "";
+            genreSelect.value = "";
+            availFilter.value = "";
+            sortFilter.value = "title";
+            render();
+        });
+
+        render();
+
+        const menuToggle = document.querySelector(".menu-toggle");
+        const navLinks = document.querySelector(".nav-links");
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener("click", () => {
+                const isOpen = navLinks.classList.toggle("nav-open");
+                menuToggle.setAttribute("aria-expanded", isOpen);
+                menuToggle.innerHTML = isOpen ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+            });
+            navLinks.querySelectorAll("a").forEach(link => {
+                link.addEventListener("click", () => {
+                    navLinks.classList.remove("nav-open");
+                    menuToggle.setAttribute("aria-expanded", "false");
+                    menuToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+                });
+            });
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | SmartShelf</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="enhancements.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fa-solid fa-book-open"></i>
+                <h2>SmartShelf <span style="color:#9C88FF; font-size:13px; font-weight:600;">Librarian</span></h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="catalog.html">Books</a></li>
+                <li><a href="admin.html">Librarian Panel</a></li>
+            </ul>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark and light mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="nav-btn"></div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="admin-wrap">
+            <div class="admin-toolbar">
+                <h1>Manage Book Catalog</h1>
+                <button class="btn-add" id="openAddModal"><i class="fa-solid fa-plus"></i> Add New Book</button>
+            </div>
+
+            <div class="stat-cards" style="margin-bottom:34px;">
+                <div class="stat-card">
+                    <div class="icon-badge" style="background:rgba(124,92,255,.15); color:#9C88FF;"><i class="fa-solid fa-books"></i></div>
+                    <div><h3 id="statTotal">0</h3><p>Total Titles</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-badge" style="background:rgba(34,197,94,.15); color:#22C55E;"><i class="fa-solid fa-copy"></i></div>
+                    <div><h3 id="statCopies">0</h3><p>Total Copies</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-badge" style="background:rgba(239,68,68,.15); color:#F87171;"><i class="fa-solid fa-book-open"></i></div>
+                    <div><h3 id="statOut">0</h3><p>Copies On Loan</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-badge" style="background:rgba(198,255,61,.15); color:#8BC400;"><i class="fa-solid fa-fire"></i></div>
+                    <div><h3 id="statTrending">0</h3><p>Trending Titles</p></div>
+                </div>
+            </div>
+
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Book</th>
+                            <th>Genre</th>
+                            <th>Copies</th>
+                            <th>Available</th>
+                            <th>Rating</th>
+                            <th>Flags</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add / Edit Modal -->
+    <div class="modal-overlay" id="bookModal">
+        <div class="modal-box">
+            <h2><span id="modalTitle">Add New Book</span> <button id="closeModal">&times;</button></h2>
+            <form id="bookForm">
+                <input type="hidden" id="bookId">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="fTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Author</label>
+                    <input type="text" id="fAuthor" required>
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Genre</label>
+                        <select id="fGenre" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Year</label>
+                        <input type="number" id="fYear" min="1900" max="2030" value="2024">
+                    </div>
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Total Copies</label>
+                        <input type="number" id="fCopies" min="1" value="5" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Available Copies</label>
+                        <input type="number" id="fAvailable" min="0" value="5" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Rating (0–5)</label>
+                    <input type="number" id="fRating" min="0" max="5" step="0.1" value="4.5">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="fDesc" rows="3" placeholder="Short description shown on the details page..."></textarea>
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group" style="display:flex; align-items:center; gap:8px; flex-direction:row;">
+                        <input type="checkbox" id="fTrending" style="width:auto;">
+                        <label style="margin:0;">Mark as Trending 🔥</label>
+                    </div>
+                    <div class="form-group" style="display:flex; align-items:center; gap:8px; flex-direction:row;">
+                        <input type="checkbox" id="fNew" style="width:auto;">
+                        <label style="margin:0;">Mark as New Arrival ✨</label>
+                    </div>
+                </div>
+                <button type="submit" style="width:100%; padding:13px; border:none; border-radius:10px; background:#3B82F6; color:#fff; font-weight:600; cursor:pointer; margin-top:8px;">Save Book</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+    <script>
+        const admin = requireAdmin();
+
+        const genreSelect = document.getElementById("fGenre");
+        Object.entries(GENRES).forEach(([key, g]) => {
+            const opt = document.createElement("option");
+            opt.value = key;
+            opt.textContent = g.label;
+            genreSelect.appendChild(opt);
+        });
+
+        function saveOverrides(overrides) { dbSet(DB_KEYS.books, overrides); }
+        function getOverrides() { return dbGet(DB_KEYS.books, { added: [], edited: {}, deleted: [] }); }
+
+        function renderTable() {
+            const books = getAllBooks();
+            const tbody = document.getElementById("adminTableBody");
+            tbody.innerHTML = books.map(book => {
+                const g = genreOf(book);
+                return `
+                <tr>
+                    <td>
+                        <div class="row-book">
+                            <div class="mini-cover" style="background:linear-gradient(135deg, ${g.color1}, ${g.color2})"><i class="${g.icon}"></i></div>
+                            <span>${book.title}</span>
+                        </div>
+                    </td>
+                    <td>${g.label}</td>
+                    <td>${book.copies}</td>
+                    <td>${book.available}</td>
+                    <td>⭐ ${book.rating}</td>
+                    <td>${book.trending ? "🔥 " : ""}${book.isNew ? "✨" : ""}</td>
+                    <td>
+                        <div class="admin-actions">
+                            <button class="icon-btn" onclick="openEdit('${book.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                            <button class="icon-btn danger" onclick="deleteBook('${book.id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join("");
+
+            document.getElementById("statTotal").textContent = books.length;
+            document.getElementById("statCopies").textContent = books.reduce((s, b) => s + b.copies, 0);
+            document.getElementById("statOut").textContent = books.reduce((s, b) => s + (b.copies - b.available), 0);
+            document.getElementById("statTrending").textContent = books.filter(b => b.trending).length;
+        }
+
+        const modal = document.getElementById("bookModal");
+        const form = document.getElementById("bookForm");
+
+        function openModal(editing) {
+            document.getElementById("modalTitle").textContent = editing ? "Edit Book" : "Add New Book";
+            modal.classList.add("open");
+        }
+        function closeModalFn() { modal.classList.remove("open"); form.reset(); document.getElementById("bookId").value = ""; }
+
+        document.getElementById("openAddModal").addEventListener("click", () => { form.reset(); document.getElementById("bookId").value = ""; openModal(false); });
+        document.getElementById("closeModal").addEventListener("click", closeModalFn);
+        modal.addEventListener("click", (e) => { if (e.target === modal) closeModalFn(); });
+
+        function openEdit(id) {
+            const book = getAllBooks().find(b => b.id === id);
+            if (!book) return;
+            document.getElementById("bookId").value = book.id;
+            document.getElementById("fTitle").value = book.title;
+            document.getElementById("fAuthor").value = book.author;
+            document.getElementById("fGenre").value = book.genre;
+            document.getElementById("fYear").value = book.year || 2024;
+            document.getElementById("fCopies").value = book.copies;
+            document.getElementById("fAvailable").value = book.available;
+            document.getElementById("fRating").value = book.rating;
+            document.getElementById("fDesc").value = book.desc || "";
+            document.getElementById("fTrending").checked = !!book.trending;
+            document.getElementById("fNew").checked = !!book.isNew;
+            openModal(true);
+        }
+
+        function deleteBook(id) {
+            if (!confirm("Delete this book from the catalog? This cannot be undone.")) return;
+            const overrides = getOverrides();
+            if (overrides.added.some(b => b.id === id)) {
+                overrides.added = overrides.added.filter(b => b.id !== id);
+            } else {
+                overrides.deleted.push(id);
+            }
+            saveOverrides(overrides);
+            renderTable();
+            toast("Book removed from catalog.", "success");
+        }
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const id = document.getElementById("bookId").value;
+            const data = {
+                title: document.getElementById("fTitle").value.trim(),
+                author: document.getElementById("fAuthor").value.trim(),
+                genre: document.getElementById("fGenre").value,
+                year: parseInt(document.getElementById("fYear").value) || 2024,
+                copies: parseInt(document.getElementById("fCopies").value) || 1,
+                available: parseInt(document.getElementById("fAvailable").value) || 0,
+                rating: parseFloat(document.getElementById("fRating").value) || 4.5,
+                desc: document.getElementById("fDesc").value.trim() || "No description available.",
+                trending: document.getElementById("fTrending").checked,
+                isNew: document.getElementById("fNew").checked,
+            };
+
+            const overrides = getOverrides();
+            if (id) {
+                // Editing: if it's a locally-added book, patch it directly; else store as an edit override
+                const addedIdx = overrides.added.findIndex(b => b.id === id);
+                if (addedIdx > -1) overrides.added[addedIdx] = { ...overrides.added[addedIdx], ...data };
+                else overrides.edited[id] = { ...(overrides.edited[id] || {}), ...data };
+                toast("Book updated.", "success");
+            } else {
+                const newId = "custom_" + Date.now();
+                overrides.added.push({ id: newId, ...data });
+                toast("New book added to catalog.", "success");
+            }
+            saveOverrides(overrides);
+            closeModalFn();
+            renderTable();
+        });
+
+        renderTable();
+
+        const menuToggle = document.querySelector(".menu-toggle");
+        const navLinks = document.querySelector(".nav-links");
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener("click", () => {
+                const isOpen = navLinks.classList.toggle("nav-open");
+                menuToggle.setAttribute("aria-expanded", isOpen);
+                menuToggle.innerHTML = isOpen ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+            });
+        }
+    </script>
+
+</body>
+</html>

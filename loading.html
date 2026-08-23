@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SmartShelf | Loading</title>
+
+    <link rel="stylesheet" href="loading.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <!-- ================= LOADING PAGE ================= -->
+
+    <main class="loading-page">
+
+        <div class="loading-content">
+
+            <!-- Logo -->
+
+            <div class="loading-logo">
+
+                <i class="fa-solid fa-book-open"></i>
+
+            </div>
+
+
+            <!-- Brand -->
+
+            <h1>SmartShelf</h1>
+
+            <p class="tagline">
+                Discover Smarter. Read Better. Learn Faster.
+            </p>
+
+
+            <!-- Animated Books -->
+
+            <div class="book-animation">
+
+                <span></span>
+                <span></span>
+                <span></span>
+
+            </div>
+
+
+            <!-- Loading Text -->
+
+            <p class="loading-text">
+                Preparing your intelligent library
+                <span class="dots">...</span>
+            </p>
+
+
+            <!-- Progress -->
+
+            <div class="progress-container">
+
+                <div class="progress-bar" id="progressBar"></div>
+
+            </div>
+
+
+            <div class="percentage" id="percentage">
+                0%
+            </div>
+
+
+            <!-- Small message -->
+
+            <p class="bottom-text">
+                Your smarter reading experience is just a moment away.
+            </p>
+
+        </div>
+
+    </main>
+
+
+    <script>
+
+        let progress = 0;
+
+        const progressBar =
+            document.getElementById("progressBar");
+
+        const percentage =
+            document.getElementById("percentage");
+
+
+        const loading = setInterval(() => {
+
+            progress += Math.floor(Math.random() * 7) + 3;
+
+
+            if (progress >= 100) {
+
+                progress = 100;
+
+                clearInterval(loading);
+
+            }
+
+
+            progressBar.style.width = progress + "%";
+
+            percentage.textContent = progress + "%";
+
+
+            if (progress === 100) {
+
+                setTimeout(() => {
+
+                    window.location.href = "index.html";
+
+                }, 500);
+
+            }
+
+        }, 100);
+
+
+    </script>
+
+</body>
+
+</html>

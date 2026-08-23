@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | SmartShelf</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="enhancements.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fa-solid fa-book-open"></i>
+                <h2>SmartShelf</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="catalog.html">Books</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark and light mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="nav-btn">
+                <a href="login.html" class="login-btn">Sign In</a>
+                <a href="signup.html" class="signup-btn">Sign Up</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="page-hero">
+            <h1>Built for how students actually read</h1>
+            <p>SmartShelf started as a final-year project and grew into a full digital library platform — because campus libraries deserved better software.</p>
+        </div>
+
+        <div class="about-grid">
+            <div class="about-card">
+                <i class="fa-solid fa-bullseye"></i>
+                <h3>Our Mission</h3>
+                <p>Make discovering, borrowing and returning books as easy as ordering food — no queues, no confusing catalog cards, just a search bar that works.</p>
+            </div>
+            <div class="about-card">
+                <i class="fa-solid fa-book-open-reader"></i>
+                <h3>What We Offer</h3>
+                <p>A searchable digital catalog, real-time availability, personal borrowing history, and a curated feed of what's actually trending with students.</p>
+            </div>
+            <div class="about-card">
+                <i class="fa-solid fa-users"></i>
+                <h3>Who It's For</h3>
+                <p>Students who want their textbooks and their BookTok reads in the same place. Librarians who want less paperwork and more visibility.</p>
+            </div>
+            <div class="about-card">
+                <i class="fa-solid fa-shield-heart"></i>
+                <h3>Always Free for Students</h3>
+                <p>SmartShelf is a campus utility, not a product. Borrowing, browsing and account creation will always be free for students and staff.</p>
+            </div>
+        </div>
+
+        <div class="page-hero" style="padding-top:20px;">
+            <h1 style="font-size:clamp(24px,3.4vw,34px);">Meet the Team</h1>
+            <p>The three of us built SmartShelf from the ground up — design, code and everything in between.</p>
+        </div>
+
+        <div class="team-grid">
+            <div class="team-card">
+                <div class="team-avatar" style="background:linear-gradient(135deg, #3B82F6, #8B5CF6);">Y</div>
+                <h3>Yashasvi</h3>
+                <p>Frontend Developer</p>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar" style="background:linear-gradient(135deg, #EC4899, #8B5CF6);">A</div>
+                <h3>Aafreen</h3>
+                <p>UI/UX Designer</p>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar" style="background:linear-gradient(135deg, #22C55E, #0EA5E9);">B</div>
+                <h3>Bhumika</h3>
+                <p>Project lead & Feature Developer</p>
+            </div>
+        </div>
+
+        <div class="page-hero" style="padding-top:20px;">
+            <h1 style="font-size:clamp(24px,3.4vw,34px);">Frequently Asked Questions</h1>
+        </div>
+
+        <div class="about-grid" style="max-width:900px;">
+            <div class="about-card">
+                <i class="fa-solid fa-circle-question"></i>
+                <h3>How long can I keep a book?</h3>
+                <p>Every borrow comes with a 14-day loan period from the day you check it out, visible on your dashboard.</p>
+            </div>
+            <div class="about-card">
+                <i class="fa-solid fa-circle-question"></i>
+                <h3>Can I reserve a book that's out?</h3>
+                <p>Not yet — but it's on our roadmap! For now, check back on the book's details page for availability.</p>
+            </div>
+            <div class="about-card">
+                <i class="fa-solid fa-circle-question"></i>
+                <h3>Who adds new books?</h3>
+                <p>Library staff manage the catalog through the admin panel, including new arrivals and trending picks.</p>
+            </div>
+            <div class="about-card">
+                <i class="fa-solid fa-circle-question"></i>
+                <h3>Is my data safe?</h3>
+                <p>This demo build stores your account and borrowing activity locally in your browser — nothing leaves your device.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-about">
+                <div class="logo">
+                    <i class="fa-solid fa-book-open"></i>
+                    <h2>SmartShelf</h2>
+                </div>
+                <h4 style="margin:14px 0 8px;">About Us</h4>
+                <p>A modern digital library for students, librarians and staff — search, borrow and manage books in one place.</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fa-brands fa-github"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="catalog.html">All Books</a></li>
+                    <li><a href="catalog.html?trend=1">Trending Now</a></li>
+                    <li><a href="catalog.html?filter=new">New Arrivals</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Account</h4>
+                <ul>
+                    <li><a href="login.html">Sign In</a></li>
+                    <li><a href="signup.html">Create Account</a></li>
+                    <li><a href="dashboard.html">My Dashboard</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="about.html">FAQs</a></li>
+                    <li><a href="#">Library Hours</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 SmartShelf. Built for students, by students.</p>
+            <p class="footer-credit">Crafted with 📚 by <strong>Yashasvi</strong>, <strong>Aafreen</strong> &amp; <strong>Bhumika</strong></p>
+        </div>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+    <script>
+        const menuToggle = document.querySelector(".menu-toggle");
+        const navLinks = document.querySelector(".nav-links");
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener("click", () => {
+                const isOpen = navLinks.classList.toggle("nav-open");
+                menuToggle.setAttribute("aria-expanded", isOpen);
+                menuToggle.innerHTML = isOpen ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+            });
+        }
+    </script>
+
+</body>
+</html>
