@@ -61,6 +61,25 @@
                 </div>
             </div>
 
+            <section class="admin-analytics">
+                <div class="analytics-card"><span>Active Loans</span><strong id="analyticsActive">0</strong><small>live borrow records</small></div>
+                <div class="analytics-card"><span>Overdue Loans</span><strong id="analyticsOverdue">0</strong><small>need attention</small></div>
+                <div class="analytics-card"><span>Outstanding Fines</span><strong id="analyticsFine">₹0</strong><small>calculated by JavaScript</small></div>
+                <div class="analytics-card analytics-wide"><span>Most Borrowed</span><strong id="analyticsPopular">No data yet</strong><small id="analyticsPopularMeta">Borrow activity will appear here</small></div>
+                <div class="analytics-card analytics-wide"><span>Top Genre</span><strong id="analyticsGenre">No data yet</strong><small id="analyticsGenreMeta">Based on borrowing history</small></div>
+            </section>
+
+            <div class="admin-filter-row">
+                <div class="admin-search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" id="adminSearch" placeholder="Search title or author..."></div>
+                <select id="adminGenreFilter" class="history-filter"><option value="">All Genres</option></select>
+                <span id="adminResultCount" class="filter-count"></span>
+            </div>
+
+            <section class="smart-panel" style="margin:0 0 26px;">
+                <div class="smart-panel-head"><h2>Admin Activity Log</h2><span class="subject">Latest catalog actions</span></div>
+                <div class="admin-log" id="adminActivityLog"></div>
+            </section>
+
             <div class="admin-table-wrap">
                 <table class="admin-table">
                     <thead>
@@ -148,6 +167,8 @@
             opt.value = key;
             opt.textContent = g.label;
             genreSelect.appendChild(opt);
+            const filterOpt = opt.cloneNode(true);
+            document.getElementById("adminGenreFilter").appendChild(filterOpt);
         });
 
         function saveOverrides(overrides) { dbSet(DB_KEYS.books, overrides); }
@@ -155,8 +176,15 @@
 
         function renderTable() {
             const books = getAllBooks();
+            const q = document.getElementById("adminSearch").value.trim().toLowerCase();
+            const genre = document.getElementById("adminGenreFilter").value;
+            const visibleBooks = books.filter(book => {
+                const matchesText = !q || book.title.toLowerCase().includes(q) || book.author.toLowerCase().includes(q);
+                const matchesGenre = !genre || book.genre === genre;
+                return matchesText && matchesGenre;
+            });
             const tbody = document.getElementById("adminTableBody");
-            tbody.innerHTML = books.map(book => {
+            tbody.innerHTML = visibleBooks.map(book => {
                 const g = genreOf(book);
                 return `
                 <tr>
@@ -180,10 +208,21 @@
                 </tr>`;
             }).join("");
 
+            document.getElementById("adminResultCount").textContent = `${visibleBooks.length} of ${books.length} titles`;
+            const analytics = getAdminAnalytics();
             document.getElementById("statTotal").textContent = books.length;
-            document.getElementById("statCopies").textContent = books.reduce((s, b) => s + b.copies, 0);
-            document.getElementById("statOut").textContent = books.reduce((s, b) => s + (b.copies - b.available), 0);
+            document.getElementById("statCopies").textContent = books.reduce((s, b) => s + Number(b.copies || 0), 0);
+            document.getElementById("statOut").textContent = analytics.activeLoans;
             document.getElementById("statTrending").textContent = books.filter(b => b.trending).length;
+            document.getElementById("analyticsActive").textContent = analytics.activeLoans;
+            document.getElementById("analyticsOverdue").textContent = analytics.overdueLoans;
+            document.getElementById("analyticsFine").textContent = `₹${analytics.outstandingFine}`;
+            document.getElementById("analyticsPopular").textContent = analytics.popularTitle;
+            document.getElementById("analyticsPopularMeta").textContent = analytics.popularTitleCount ? `${analytics.popularTitleCount} borrow record${analytics.popularTitleCount === 1 ? "" : "s"}` : "Borrow activity will appear here";
+            document.getElementById("analyticsGenre").textContent = analytics.topGenre;
+            document.getElementById("analyticsGenreMeta").textContent = analytics.topGenreCount ? `${analytics.topGenreCount} borrow record${analytics.topGenreCount === 1 ? "" : "s"}` : "Based on borrowing history";
+            const log = getAdminActivityLog(7);
+            document.getElementById("adminActivityLog").innerHTML = log.length ? log.map(item => `<div class="admin-log-item"><i class="fa-solid ${item.action === "delete" ? "fa-trash" : item.action === "add" ? "fa-plus" : "fa-pen"}"></i><div><strong>${item.action.toUpperCase()} · ${escapeHTML(item.details)}</strong><span>by ${escapeHTML(item.by)}</span></div><time>${new Date(item.at).toLocaleString()}</time></div>`).join("") : `<div class="notice-item"><i class="fa-solid fa-clock-rotate-left"></i><span>No admin actions recorded yet.</span></div>`;
         }
 
         const modal = document.getElementById("bookModal");
@@ -218,6 +257,7 @@
 
         function deleteBook(id) {
             if (!confirm("Delete this book from the catalog? This cannot be undone.")) return;
+            const deletedBook = getAllBooks().find(b => b.id === id);
             const overrides = getOverrides();
             if (overrides.added.some(b => b.id === id)) {
                 overrides.added = overrides.added.filter(b => b.id !== id);
@@ -225,6 +265,7 @@
                 overrides.deleted.push(id);
             }
             saveOverrides(overrides);
+            logAdminActivity("delete", deletedBook ? deletedBook.title : id);
             renderTable();
             toast("Book removed from catalog.", "success");
         }
@@ -245,22 +286,31 @@
                 isNew: document.getElementById("fNew").checked,
             };
 
+            if (!data.title || !data.author) { toast("Title and author are required.", "error"); return; }
+            if (data.available > data.copies) { toast("Available copies cannot exceed total copies.", "error"); return; }
+            if (data.rating < 0 || data.rating > 5) { toast("Rating must be between 0 and 5.", "error"); return; }
+
             const overrides = getOverrides();
             if (id) {
                 // Editing: if it's a locally-added book, patch it directly; else store as an edit override
                 const addedIdx = overrides.added.findIndex(b => b.id === id);
                 if (addedIdx > -1) overrides.added[addedIdx] = { ...overrides.added[addedIdx], ...data };
                 else overrides.edited[id] = { ...(overrides.edited[id] || {}), ...data };
+                logAdminActivity("edit", data.title);
                 toast("Book updated.", "success");
             } else {
                 const newId = "custom_" + Date.now();
                 overrides.added.push({ id: newId, ...data });
+                logAdminActivity("add", data.title);
                 toast("New book added to catalog.", "success");
             }
             saveOverrides(overrides);
             closeModalFn();
             renderTable();
         });
+
+        document.getElementById("adminSearch").addEventListener("input", renderTable);
+        document.getElementById("adminGenreFilter").addEventListener("change", renderTable);
 
         renderTable();
 

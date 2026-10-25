@@ -46,9 +46,13 @@
         </div>
 
         <div class="filter-bar">
-            <div class="filter-group" style="flex:1; min-width:220px;">
+            <div class="filter-group search-filter-group" style="flex:1; min-width:220px;">
                 <label>Search</label>
-                <input type="text" id="searchInput" placeholder="Title, author or keyword...">
+                <div class="voice-search-wrap">
+                    <input type="text" id="searchInput" autocomplete="off" placeholder="Title, author or keyword...">
+                    <button class="voice-btn" id="voiceSearchBtn" type="button" title="Search by voice" aria-label="Search by voice"><i class="fa-solid fa-microphone"></i></button>
+                </div>
+                <div class="search-suggestions" id="searchSuggestions" aria-live="polite"></div>
             </div>
             <div class="filter-group">
                 <label>Genre</label>
@@ -77,7 +81,17 @@
             <span class="filter-count" id="resultCount">0 books found</span>
         </div>
 
+        <div class="catalog-tools">
+            <div class="recent-searches" id="recentSearches"></div>
+            <div class="catalog-tool-actions">
+                <button class="tool-btn" id="surpriseBtn" type="button"><i class="fa-solid fa-dice"></i> Surprise Me</button>
+                <button class="tool-btn primary" id="compareBtn" type="button" disabled><i class="fa-solid fa-scale-balanced"></i> Compare 0 Books</button>
+            </div>
+        </div>
+        <div class="catalog-loading" id="catalogLoading"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading books with JavaScript Promise...</div>
         <div class="catalog-grid" id="catalogGrid"></div>
+        <div class="surprise-card" id="surpriseCard"></div>
+        <div class="compare-modal" id="compareModal"><div class="compare-box"><div class="compare-head"><div><span class="subject">JavaScript comparison</span><h2>Compare Selected Books</h2></div><button class="compare-close" id="compareClose" type="button">&times;</button></div><div id="compareContent"></div></div></div>
 
         <div class="empty-state" id="emptyState" style="display:none;">
             <i class="fa-solid fa-book-skull"></i>
@@ -145,77 +159,116 @@
         const grid = document.getElementById("catalogGrid");
         const emptyState = document.getElementById("emptyState");
         const resultCount = document.getElementById("resultCount");
+        const suggestionsBox = document.getElementById("searchSuggestions");
+        const loadingBox = document.getElementById("catalogLoading");
+        const compareBtn = document.getElementById("compareBtn");
+        const compareModal = document.getElementById("compareModal");
+        const selectedCompare = new Set();
+        let catalogRequest = 0;
 
         Object.entries(GENRES).forEach(([key, g]) => {
-            const opt = document.createElement("option");
-            opt.value = key;
-            opt.textContent = g.label;
-            genreSelect.appendChild(opt);
+            const opt = document.createElement("option"); opt.value = key; opt.textContent = g.label; genreSelect.appendChild(opt);
         });
-
         if (params.get("q")) searchInput.value = params.get("q");
         if (params.get("genre")) genreSelect.value = params.get("genre");
         if (params.get("trend")) availFilter.value = "trending";
         if (params.get("filter") === "new") availFilter.value = "new";
 
-        function render() {
-            let books = getAllBooks();
-            const q = searchInput.value.trim().toLowerCase();
-            const genre = genreSelect.value;
-            const avail = availFilter.value;
-            const sort = sortFilter.value;
-
-            if (q) books = books.filter(b => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q));
-            if (genre) books = books.filter(b => b.genre === genre);
-            if (avail === "available") books = books.filter(b => b.available > 0);
-            if (avail === "trending") books = books.filter(b => b.trending);
-            if (avail === "new") books = books.filter(b => b.isNew);
-
-            if (sort === "title") books = [...books].sort((a, b) => a.title.localeCompare(b.title));
-            if (sort === "rating") books = [...books].sort((a, b) => b.rating - a.rating);
-            if (sort === "year") books = [...books].sort((a, b) => (b.year || 0) - (a.year || 0));
-
-            resultCount.textContent = `${books.length} book${books.length !== 1 ? "s" : ""} found`;
-
-            if (books.length === 0) {
-                grid.style.display = "none";
-                emptyState.style.display = "block";
-            } else {
-                grid.style.display = "grid";
-                emptyState.style.display = "none";
-                grid.innerHTML = books.map(bookCardHTML).join("");
-            }
+        function updateCompareButton() {
+            compareBtn.disabled = selectedCompare.size < 2;
+            compareBtn.innerHTML = `<i class="fa-solid fa-scale-balanced"></i> Compare ${selectedCompare.size} Book${selectedCompare.size === 1 ? "" : "s"}`;
         }
+        function addCompareControls() {
+            grid.querySelectorAll(".book-card").forEach(card => {
+                const id = card.dataset.id;
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = `compare-select ${selectedCompare.has(id) ? "active" : ""}`;
+                button.innerHTML = `<i class="fa-solid ${selectedCompare.has(id) ? "fa-check" : "fa-plus"}"></i> Compare`;
+                button.addEventListener("click", (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    if (selectedCompare.has(id)) selectedCompare.delete(id);
+                    else if (selectedCompare.size >= 3) { toast("You can compare up to 3 books at a time.", "info"); return; }
+                    else selectedCompare.add(id);
+                    button.classList.toggle("active", selectedCompare.has(id));
+                    button.innerHTML = `<i class="fa-solid ${selectedCompare.has(id) ? "fa-check" : "fa-plus"}"></i> Compare`;
+                    updateCompareButton();
+                });
+                card.appendChild(button);
+            });
+        }
+        async function render() {
+            const request = ++catalogRequest;
+            loadingBox.classList.add("show");
+            try {
+                let books = await loadBooksAsync(); // Promise use #1
+                if (request !== catalogRequest) return;
+                const q = searchInput.value.trim().toLowerCase();
+                const genre = genreSelect.value, avail = availFilter.value, sort = sortFilter.value;
+                if (q) books = books.filter(b => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q));
+                if (genre) books = books.filter(b => b.genre === genre);
+                if (avail === "available") books = books.filter(b => b.available > 0);
+                if (avail === "trending") books = books.filter(b => b.trending);
+                if (avail === "new") books = books.filter(b => b.isNew);
+                if (sort === "title") books = [...books].sort((a,b)=>a.title.localeCompare(b.title));
+                if (sort === "rating") books = [...books].sort((a,b)=>getBookDisplayRating(b)-getBookDisplayRating(a));
+                if (sort === "year") books = [...books].sort((a,b)=>(b.year||0)-(a.year||0));
+                resultCount.textContent = `${books.length} book${books.length !== 1 ? "s" : ""} found`;
+                if (!books.length) { grid.style.display="none"; emptyState.style.display="block"; }
+                else { grid.style.display="grid"; emptyState.style.display="none"; grid.innerHTML=books.map(bookCardHTML).join(""); addCompareControls(); }
+            } catch (error) {
+                toast("Catalog could not be loaded. Please retry.", "error"); console.error(error);
+            } finally { if (request === catalogRequest) loadingBox.classList.remove("show"); }
+        }
+        function renderSuggestions() {
+            const matches = searchBookSuggestions(searchInput.value, 6);
+            if (!matches.length) { suggestionsBox.classList.remove("open"); suggestionsBox.innerHTML=""; return; }
+            suggestionsBox.innerHTML = matches.map(book => `<button type="button" class="suggestion-item" data-id="${book.id}"><span><strong>${escapeHTML(book.title)}</strong><small>${escapeHTML(book.author)}</small></span><span class="suggestion-rating">⭐ ${getBookDisplayRating(book).toFixed(1)}</span></button>`).join("");
+            suggestionsBox.classList.add("open");
+        }
+        function renderRecentSearches() {
+            const box = document.getElementById("recentSearches");
+            const terms = getRecentSearches();
+            box.innerHTML = terms.length ? `<span>Recent:</span>${terms.map(t=>`<button type="button" class="recent-chip" data-term="${escapeHTML(t)}">${escapeHTML(t)}</button>`).join("")}<button type="button" class="recent-clear" id="clearRecent">Clear</button>` : `<span>No recent searches yet.</span>`;
+            box.querySelectorAll(".recent-chip").forEach(btn => btn.addEventListener("click",()=>{searchInput.value=btn.dataset.term; render(); renderSuggestions();}));
+            document.getElementById("clearRecent")?.addEventListener("click",()=>{clearRecentSearches(); renderRecentSearches();});
+        }
+        searchInput.addEventListener("input",()=>{render();renderSuggestions();});
+        searchInput.addEventListener("focus",renderSuggestions);
+        searchInput.addEventListener("keydown",e=>{ if(e.key==="Enter"){ saveRecentSearch(searchInput.value); renderRecentSearches(); suggestionsBox.classList.remove("open"); }});
+        suggestionsBox.addEventListener("click",e=>{const item=e.target.closest(".suggestion-item");if(!item)return;const b=getAllBooks().find(x=>x.id===item.dataset.id);if(b)saveRecentSearch(b.title);location.href=`book-details.html?id=${item.dataset.id}`;});
+        document.addEventListener("click",e=>{if(!e.target.closest(".search-filter-group"))suggestionsBox.classList.remove("open");});
+        [genreSelect,availFilter,sortFilter].forEach(el=>el.addEventListener("change",render));
+        document.getElementById("resetBtn").addEventListener("click",()=>{searchInput.value="";genreSelect.value="";availFilter.value="";sortFilter.value="title";render();});
 
-        [searchInput].forEach(el => el.addEventListener("input", render));
-        [genreSelect, availFilter, sortFilter].forEach(el => el.addEventListener("change", render));
-
-        document.getElementById("resetBtn").addEventListener("click", () => {
-            searchInput.value = "";
-            genreSelect.value = "";
-            availFilter.value = "";
-            sortFilter.value = "title";
-            render();
+        document.getElementById("voiceSearchBtn").addEventListener("click",()=>{
+            const btn=document.getElementById("voiceSearchBtn");
+            startVoiceSearch(text=>{searchInput.value=text;saveRecentSearch(text);renderRecentSearches();render();renderSuggestions();toast(`Voice search: ${text}`,"success");}, listening=>btn.classList.toggle("listening",listening));
         });
 
-        render();
+        document.getElementById("surpriseBtn").addEventListener("click",()=>{
+            const book=pickSurpriseBook(); if(!book){toast("No available book found right now.","info");return;}
+            const box=document.getElementById("surpriseCard");
+            box.innerHTML=`<span class="subject">Surprise pick</span><h3>${escapeHTML(book.title)}</h3><p>${escapeHTML(book.author)} · ${escapeHTML(genreOf(book).label)} · ⭐ ${getBookDisplayRating(book).toFixed(1)}</p><div class="surprise-actions"><a href="book-details.html?id=${book.id}">View Details</a><button type="button" id="pickAgain">Pick Another</button></div>`;
+            box.classList.add("show"); document.getElementById("pickAgain").onclick=()=>document.getElementById("surpriseBtn").click(); setTimeout(()=>box.classList.remove("show"),12000);
+        });
 
-        const menuToggle = document.querySelector(".menu-toggle");
-        const navLinks = document.querySelector(".nav-links");
-        if (menuToggle && navLinks) {
-            menuToggle.addEventListener("click", () => {
-                const isOpen = navLinks.classList.toggle("nav-open");
-                menuToggle.setAttribute("aria-expanded", isOpen);
-                menuToggle.innerHTML = isOpen ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
-            });
-            navLinks.querySelectorAll("a").forEach(link => {
-                link.addEventListener("click", () => {
-                    navLinks.classList.remove("nav-open");
-                    menuToggle.setAttribute("aria-expanded", "false");
-                    menuToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
-                });
-            });
-        }
+        compareBtn.addEventListener("click",()=>{
+            const books=[...selectedCompare].map(id=>getAllBooks().find(b=>b.id===id)).filter(Boolean); if(books.length<2)return;
+            const rows=[
+                ["Author",b=>b.author],["Genre",b=>genreOf(b).label],["Rating",b=>`⭐ ${getBookDisplayRating(b).toFixed(1)}`],["Pages",b=>b.pages||"—"],["Availability",b=>`${b.available} / ${b.copies}`],["Year",b=>b.year||"—"],["Est. reading time",b=>b.pages?`${Math.max(1,Math.round(b.pages/45))} hrs`:"—"]
+            ];
+            document.getElementById("compareContent").innerHTML=`<div style="overflow:auto"><table class="compare-table"><thead><tr><th>Feature</th>${books.map(b=>`<th><div class="compare-book-title">${escapeHTML(b.title)}</div><small>${escapeHTML(b.author)}</small></th>`).join("")}</tr></thead><tbody>${rows.map(([label,fn])=>`<tr><td>${label}</td>${books.map(b=>`<td>${fn(b)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+            compareModal.classList.add("open");
+        });
+        document.getElementById("compareClose").addEventListener("click",()=>compareModal.classList.remove("open"));
+        compareModal.addEventListener("click",e=>{if(e.target===compareModal)compareModal.classList.remove("open")});
+        window.addEventListener("smartshelf:undo",render);
+        renderRecentSearches(); updateCompareButton(); render();
+        if(params.get("focus")==="search") setTimeout(()=>searchInput.focus(),200);
+
+        const menuToggle=document.querySelector(".menu-toggle"),navLinks=document.querySelector(".nav-links");
+        if(menuToggle&&navLinks){menuToggle.addEventListener("click",()=>{const isOpen=navLinks.classList.toggle("nav-open");menuToggle.setAttribute("aria-expanded",isOpen);menuToggle.innerHTML=isOpen?'<i class="fa-solid fa-xmark"></i>':'<i class="fa-solid fa-bars"></i>';});navLinks.querySelectorAll("a").forEach(link=>link.addEventListener("click",()=>{navLinks.classList.remove("nav-open");menuToggle.setAttribute("aria-expanded","false");menuToggle.innerHTML='<i class="fa-solid fa-bars"></i>';}));}
     </script>
 
 </body>

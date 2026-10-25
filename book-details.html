@@ -44,6 +44,8 @@
             <!-- Rendered by JS -->
         </div>
 
+        <section class="reviews-panel" id="reviewsSection"></section>
+
         <div class="catalog-grid" id="relatedGrid" style="width:90%; max-width:1100px; margin:0 auto 100px;"></div>
     </main>
 
@@ -125,7 +127,7 @@
                     <h1>${book.title}</h1>
                     <p class="author">by ${book.author}</p>
                     <div class="details-meta">
-                        <div><span>Rating</span><span>⭐ ${book.rating} / 5</span></div>
+                        <div><span>Rating</span><span>⭐ <span id="liveBookRating">${getBookDisplayRating(book).toFixed(1)}</span> / 5</span></div>
                         <div><span>Year</span><span>${book.year || "—"}</span></div>
                         <div><span>Pages</span><span>${book.pages || "—"}</span></div>
                         <div><span>Copies</span><span>${book.available} / ${book.copies} available</span></div>
@@ -143,24 +145,35 @@
                         </button>
                         <button class="secondary-btn" onclick="history.back()">Back</button>
                     </div>
+                    ${isReserved(book.id) ? `<p class="queue-note"><i class="fa-solid fa-list-ol"></i> Reservation queue position: <strong>#${getReservationPosition(book.id) || 1}</strong></p>` : ""}
                 </div>
             `;
 
             const borrowBtn = document.getElementById("borrowBtn");
             if (borrowBtn) {
-                borrowBtn.addEventListener("click", () => {
-                    if (!currentUser()) { toast("Please sign in to borrow a book.", "error"); setTimeout(() => location.href = "login.html", 900); return; }
-                    if (borrowBook(book.id)) setTimeout(() => location.href = "dashboard.html", 900);
+                borrowBtn.addEventListener("click", async () => {
+                    borrowBtn.disabled = true; borrowBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Borrowing...';
+                    try {
+                        await borrowBookAsync(book.id); // Promise use #2
+                        setTimeout(() => location.href = "dashboard.html", 650);
+                    } catch (error) {
+                        toast(error.message || "Borrowing failed.", "error");
+                        borrowBtn.disabled = false; borrowBtn.innerHTML = '<i class="fa-solid fa-book"></i> Borrow This Book';
+                        if (!currentUser()) setTimeout(() => location.href = "login.html", 900);
+                    }
                 });
             }
 
             const wishlistBtn = document.getElementById("detailsWishlistBtn");
             if (wishlistBtn) {
-                wishlistBtn.addEventListener("click", () => {
-                    const nowSaved = toggleWishlist(book.id);
-                    wishlistBtn.classList.toggle("active", nowSaved);
-                    document.getElementById("wishlistBtnLabel").textContent = nowSaved ? "Saved" : "Save for Later";
-                });
+                const syncDetailsWishlist = () => {
+                    const saved = isWishlisted(book.id);
+                    wishlistBtn.classList.toggle("active", saved);
+                    document.getElementById("wishlistBtnLabel").textContent = saved ? "Saved" : "Save for Later";
+                };
+                // app.js owns the actual wishlist toggle; this page only syncs its text.
+                wishlistBtn.addEventListener("click", () => setTimeout(syncDetailsWishlist, 0));
+                window.addEventListener("smartshelf:undo", syncDetailsWishlist);
             }
 
             const reserveBtn = document.getElementById("reserveBtn");
@@ -169,8 +182,91 @@
                     const nowReserved = toggleReservation(book.id);
                     reserveBtn.classList.toggle("active", nowReserved);
                     reserveBtn.innerHTML = `<i class="fa-solid fa-bookmark"></i> ${nowReserved ? "Reserved" : "Reserve This Book"}`;
+                    setTimeout(() => location.reload(), 450);
                 });
             }
+
+            const reviewsSection = document.getElementById("reviewsSection");
+            let selectedRating = 0;
+
+            function renderReviews() {
+                const reviews = getBookReviews(book.id);
+                const me = currentUser();
+                const myReview = me ? reviews.find(r => r.email === me.email) : null;
+                selectedRating = myReview ? Number(myReview.rating) : 0;
+                const displayRating = getBookDisplayRating(book).toFixed(1);
+                const ratingEl = document.getElementById("liveBookRating");
+                if (ratingEl) ratingEl.textContent = displayRating;
+
+                reviewsSection.innerHTML = `
+                    <div class="reviews-head">
+                        <div>
+                            <span class="subject">JavaScript-powered feedback</span>
+                            <h2>Student Ratings & Reviews</h2>
+                            <p>${reviews.length ? `${reviews.length} student review${reviews.length === 1 ? "" : "s"}` : "Be the first student to review this book."}</p>
+                        </div>
+                        <div class="rating-summary"><strong>⭐ ${displayRating}</strong><span>overall rating</span></div>
+                    </div>
+                    ${me ? `
+                        <form class="review-form" id="reviewForm">
+                            <div class="star-picker" id="starPicker" aria-label="Choose a star rating">
+                                ${[1,2,3,4,5].map(n => `<button type="button" class="star-choice ${n <= selectedRating ? "active" : ""}" data-rating="${n}" aria-label="${n} stars"><i class="fa-solid fa-star"></i></button>`).join("")}
+                            </div>
+                            <textarea id="reviewComment" maxlength="400" placeholder="Share a short review (optional)...">${myReview ? escapeHTML(myReview.comment) : escapeHTML(getReviewDraft(book.id))}</textarea>
+                            <div class="review-form-actions">
+                                <small id="reviewCounter">${myReview ? myReview.comment.length : getReviewDraft(book.id).length}/400</small><small class="review-draft-note" id="draftStatus">${!myReview && getReviewDraft(book.id) ? "Draft restored" : "Auto-save on"}</small>
+                                ${myReview ? `<button type="button" class="review-delete" id="deleteReviewBtn">Delete my review</button>` : ""}
+                                <button type="submit" class="primary-btn">${myReview ? "Update Review" : "Submit Review"}</button>
+                            </div>
+                        </form>` : `
+                        <div class="review-login-note"><i class="fa-solid fa-lock"></i><span><a href="login.html">Sign in</a> to add your rating and review.</span></div>`}
+                    <div class="review-list">
+                        ${reviews.length ? reviews.map(r => `
+                            <article class="review-item">
+                                <div class="review-avatar">${escapeHTML((r.name || "S").charAt(0).toUpperCase())}</div>
+                                <div class="review-body">
+                                    <div class="review-top"><strong>${escapeHTML(r.name || "Student")}</strong><span>${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</span></div>
+                                    <small>${new Date(r.createdAt).toLocaleDateString()}</small>
+                                    <p>${r.comment ? escapeHTML(r.comment) : "Rated this book without a written comment."}</p>
+                                </div>
+                            </article>`).join("") : `<div class="empty-review">No reviews yet.</div>`}
+                    </div>`;
+
+                const picker = document.getElementById("starPicker");
+                if (picker) picker.addEventListener("click", (e) => {
+                    const btn = e.target.closest(".star-choice");
+                    if (!btn) return;
+                    selectedRating = Number(btn.dataset.rating);
+                    picker.querySelectorAll(".star-choice").forEach(star => star.classList.toggle("active", Number(star.dataset.rating) <= selectedRating));
+                });
+
+                const comment = document.getElementById("reviewComment");
+                if (comment) {
+                    let draftTimer;
+                    comment.addEventListener("input", () => {
+                        document.getElementById("reviewCounter").textContent = `${comment.value.length}/400`;
+                        clearTimeout(draftTimer);
+                        draftTimer = setTimeout(() => { saveReviewDraft(book.id, comment.value); const ds=document.getElementById("draftStatus"); if(ds) ds.textContent="Draft saved ✓"; }, 300);
+                    });
+                }
+
+                const form = document.getElementById("reviewForm");
+                if (form) form.addEventListener("submit", (e) => {
+                    e.preventDefault();
+                    const result = submitBookReview(book.id, selectedRating, comment.value);
+                    if (!result.ok) { toast(result.error, "error"); return; }
+                    clearReviewDraft(book.id);
+                    toast(myReview ? "Review updated." : "Thanks! Your review was added.", "success");
+                    renderReviews();
+                });
+
+                const deleteBtn = document.getElementById("deleteReviewBtn");
+                if (deleteBtn) deleteBtn.addEventListener("click", () => {
+                    if (removeOwnReview(book.id)) { clearReviewDraft(book.id); toast("Your review was removed.", "info"); renderReviews(); }
+                });
+            }
+
+            renderReviews();
 
             // Related books (same genre, excluding this one)
             const related = getAllBooks().filter(b => b.genre === book.genre && b.id !== book.id).slice(0, 3);

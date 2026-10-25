@@ -56,6 +56,10 @@
                     <div class="icon-badge" style="background:rgba(34,197,94,.15); color:#22C55E;"><i class="fa-solid fa-circle-check"></i></div>
                     <div><h3 id="statReturned">0</h3><p>Total Books Returned</p></div>
                 </div>
+                <div class="stat-card">
+                    <div class="icon-badge" style="background:rgba(245,158,11,.15); color:#F59E0B;"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                    <div><h3 id="statFine">₹0</h3><p>Current Overdue Fine</p></div>
+                </div>
             </div>
 
             <div class="dash-section-title">
@@ -66,6 +70,11 @@
 
             <div class="dash-section-title" style="margin-top:48px;">
                 <h2>Borrowing History</h2>
+                <select id="historyFilter" class="history-filter" aria-label="Filter borrowing history">
+                    <option value="returned">Returned Books</option>
+                    <option value="all">All Records</option>
+                    <option value="overdue">Currently Overdue</option>
+                </select>
             </div>
             <div class="borrowed-list" id="historyList"></div>
 
@@ -92,6 +101,14 @@
                         <span class="goal-number" id="goalNumber">6</span>
                         <button class="goal-btn" type="button" id="goalUp" aria-label="Increase reading goal">+</button>
                     </div>
+                </div>
+            </section>
+
+            <section class="smart-panel">
+                <div class="smart-panel-head"><h2>Reading Streak & Achievements</h2><span class="subject">JavaScript gamification</span></div>
+                <div class="streak-panel">
+                    <div class="streak-card"><i class="fa-solid fa-fire"></i><div><strong id="streakCount">0 days</strong><span>current reading activity streak</span></div></div>
+                    <div class="badge-grid" id="badgeGrid"></div>
                 </div>
             </section>
 
@@ -158,6 +175,7 @@
                     <div class="info">
                         <h4>${book.title}</h4>
                         <p>${book.author} · Borrowed ${new Date(rec.borrowedDate).toLocaleDateString()}</p>
+                        ${calculateFineForRecord(rec) > 0 ? `<p class="fine-line"><i class="fa-solid fa-indian-rupee-sign"></i> Fine: ₹${calculateFineForRecord(rec)} ${rec.returned ? "(recorded)" : "(current)"}</p>` : ""}
                     </div>
                     <span class="status-badge ${status.cls}">${status.label}</span>
                     ${rec.returned
@@ -167,59 +185,52 @@
                 </div>`;
         }
 
-        function refresh() {
+        async function refresh() {
             if (!user) return;
             document.getElementById("welcomeHeading").textContent = `Welcome back, ${user.name.split(" ")[0]} 👋`;
+            try {
+                const data = await loadDashboardDataAsync(); // Promise use #3: Promise.all()
+                const records = data.records;
+                const active = records.filter(r => !r.returned);
+                const history = records.filter(r => r.returned);
+                const dueSoon = active.filter(r => daysUntil(r.dueDate) >= 0 && daysUntil(r.dueDate) <= 3);
+                document.getElementById("statBorrowed").textContent = active.length;
+                document.getElementById("statDueSoon").textContent = dueSoon.length;
+                document.getElementById("statReturned").textContent = history.length;
+                document.getElementById("statFine").textContent = `₹${getMyOutstandingFine()}`;
 
-            const records = myBorrowRecords();
-            const active = records.filter(r => !r.returned);
-            const history = records.filter(r => r.returned);
-            const dueSoon = active.filter(r => daysUntil(r.dueDate) <= 3);
+                document.getElementById("activeList").innerHTML = active.length ? active.map(renderBorrowedItem).join("") : `<div class="empty-state" style="margin:20px auto;"><i class="fa-solid fa-book-open-reader"></i><h3>No books borrowed yet</h3><p><a href="catalog.html" style="color:#9C88FF;">Browse the catalog</a> to find something to read.</p></div>`;
+                const historyMode = document.getElementById("historyFilter").value;
+                let historyView = history;
+                if (historyMode === "all") historyView = records;
+                if (historyMode === "overdue") historyView = active.filter(r => daysUntil(r.dueDate) < 0);
+                document.getElementById("historyList").innerHTML = historyView.length ? historyView.slice().reverse().map(renderBorrowedItem).join("") : `<div class="empty-state" style="margin:20px auto;"><i class="fa-solid fa-clock-rotate-left"></i><h3>No matching records</h3><p>Try a different history filter.</p></div>`;
 
-            document.getElementById("statBorrowed").textContent = active.length;
-            document.getElementById("statDueSoon").textContent = dueSoon.length;
-            document.getElementById("statReturned").textContent = history.length;
+                const wishlistBooks = data.wishlist.map(id => getAllBooks().find(b => b.id === id)).filter(Boolean);
+                document.getElementById("wishlistGrid").innerHTML = wishlistBooks.length ? wishlistBooks.map(bookCardHTML).join("") : `<div class="empty-state" style="grid-column:1/-1; margin:20px auto;"><i class="fa-solid fa-heart-crack"></i><h3>Your wishlist is empty</h3><p>Tap the heart on any book to save it for later.</p></div>`;
 
-            const activeList = document.getElementById("activeList");
-            activeList.innerHTML = active.length
-                ? active.map(renderBorrowedItem).join("")
-                : `<div class="empty-state" style="margin:20px auto;"><i class="fa-solid fa-book-open-reader"></i><h3>No books borrowed yet</h3><p><a href="catalog.html" style="color:#9C88FF;">Browse the catalog</a> to find something to read.</p></div>`;
+                const notes = data.notifications;
+                document.getElementById("alertCount").textContent = `${notes.length} alert${notes.length === 1 ? "" : "s"}`;
+                document.getElementById("noticeList").innerHTML = notes.length ? notes.map(n => `<div class="notice-item ${n.tone}"><i class="fa-solid ${n.icon}"></i><span>${n.text}</span></div>`).join("") : `<div class="notice-item success"><i class="fa-solid fa-circle-check"></i><span>Everything looks good. No urgent library alerts right now.</span></div>`;
 
-            const historyList = document.getElementById("historyList");
-            historyList.innerHTML = history.length
-                ? history.slice().reverse().map(renderBorrowedItem).join("")
-                : `<div class="empty-state" style="margin:20px auto;"><i class="fa-solid fa-clock-rotate-left"></i><h3>No history yet</h3><p>Returned books will show up here.</p></div>`;
+                const goal = getReadingGoal(), completed = history.length;
+                document.getElementById("goalNumber").textContent = goal;
+                document.getElementById("goalText").textContent = `${completed} of ${goal} books completed`;
+                document.getElementById("goalFill").style.width = `${Math.min(100, Math.round((completed / goal) * 100))}%`;
 
-            const wishlistGrid = document.getElementById("wishlistGrid");
-            const wishlistBooks = getWishlist().map(id => getAllBooks().find(b => b.id === id)).filter(Boolean);
-            wishlistGrid.innerHTML = wishlistBooks.length
-                ? wishlistBooks.map(bookCardHTML).join("")
-                : `<div class="empty-state" style="grid-column:1/-1; margin:20px auto;"><i class="fa-solid fa-heart-crack"></i><h3>Your wishlist is empty</h3><p>Tap the heart on any book to save it for later.</p></div>`;
+                const reservedBooks = data.reservations.map(id => getAllBooks().find(b => b.id === id)).filter(Boolean);
+                document.getElementById("reservationList").innerHTML = reservedBooks.length ? reservedBooks.map(book => { const position=getReservationPosition(book.id); const ready=book.available>0&&position&&position<=book.available; return `<div class="reservation-item"><div class="mini-cover" style="background:linear-gradient(135deg, ${genreOf(book).color1}, ${genreOf(book).color2})"><i class="${genreOf(book).icon}"></i></div><div class="info"><h4>${book.title}</h4><p>${ready?"✅ A copy is reserved for you now":`Queue position #${position||"—"} · ${book.available>0?"waiting for earlier reservations":"waiting for a return"}`}</p></div>${ready?`<a class="reserve-btn" href="book-details.html?id=${book.id}">Borrow Now</a>`:""}<button class="reserve-btn active" type="button" onclick="toggleReservation('${book.id}'); refresh();">Cancel</button></div>`; }).join("") : `<div class="notice-item"><i class="fa-solid fa-bookmark"></i><span>No active reservations. Unavailable books can be reserved from their details page.</span></div>`;
 
-            const notes = getLibraryNotifications();
-            document.getElementById("alertCount").textContent = `${notes.length} alert${notes.length === 1 ? "" : "s"}`;
-            document.getElementById("noticeList").innerHTML = notes.length
-                ? notes.map(n => `<div class="notice-item ${n.tone}"><i class="fa-solid ${n.icon}"></i><span>${n.text}</span></div>`).join("")
-                : `<div class="notice-item success"><i class="fa-solid fa-circle-check"></i><span>Everything looks good. No urgent library alerts right now.</span></div>`;
+                document.getElementById("recommendationGrid").innerHTML = data.recommendations.map(bookCardHTML).join("");
+                const recentBooks = data.recentViews.map(id => getAllBooks().find(b => b.id === id)).filter(Boolean).slice(0,4);
+                document.getElementById("recentGrid").innerHTML = recentBooks.length ? recentBooks.map(bookCardHTML).join("") : `<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-clock-rotate-left"></i><h3>No recently viewed books</h3><p>Open a book's details and it will appear here.</p></div>`;
 
-            const goal = getReadingGoal();
-            const completed = history.length;
-            document.getElementById("goalNumber").textContent = goal;
-            document.getElementById("goalText").textContent = `${completed} of ${goal} books completed`;
-            document.getElementById("goalFill").style.width = `${Math.min(100, Math.round((completed / goal) * 100))}%`;
-
-            const reservationList = document.getElementById("reservationList");
-            const reservedBooks = getReservations().map(id => getAllBooks().find(b => b.id === id)).filter(Boolean);
-            reservationList.innerHTML = reservedBooks.length
-                ? reservedBooks.map(book => `<div class="reservation-item"><div class="mini-cover" style="background:linear-gradient(135deg, ${genreOf(book).color1}, ${genreOf(book).color2})"><i class="${genreOf(book).icon}"></i></div><div class="info"><h4>${book.title}</h4><p>${book.available > 0 ? "A copy is available now" : "Waiting for a copy"}</p></div><button class="reserve-btn active" type="button" onclick="toggleReservation('${book.id}'); refresh();">Cancel</button></div>`).join("")
-                : `<div class="notice-item"><i class="fa-solid fa-bookmark"></i><span>No active reservations. Unavailable books can be reserved from their details page.</span></div>`;
-
-            const recGrid = document.getElementById("recommendationGrid");
-            recGrid.innerHTML = getRecommendations(4).map(bookCardHTML).join("");
-
-            const recentGrid = document.getElementById("recentGrid");
-            const recentBooks = getRecentViews().map(id => getAllBooks().find(b => b.id === id)).filter(Boolean).slice(0, 4);
-            recentGrid.innerHTML = recentBooks.length ? recentBooks.map(bookCardHTML).join("") : `<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-clock-rotate-left"></i><h3>No recently viewed books</h3><p>Open a book's details and it will appear here.</p></div>`;
+                const streak = getReadingStreak();
+                document.getElementById("streakCount").textContent = `${streak} day${streak===1?"":"s"}`;
+                document.getElementById("badgeGrid").innerHTML = getAchievements().map(b => `<div class="achievement ${b.unlocked?"":"locked"}" title="${b.unlocked?"Unlocked":"Locked"}"><i class="fa-solid ${b.icon}"></i><div><strong>${b.label}</strong><span>${b.unlocked?"Unlocked ✓":b.desc}</span></div></div>`).join("");
+            } catch (error) {
+                console.error(error); toast("Dashboard data could not be loaded.", "error");
+            }
         }
 
         function handleReturn(recordId) {
@@ -236,6 +247,7 @@
 
         document.getElementById("goalDown").addEventListener("click", () => { setReadingGoal(getReadingGoal() - 1); refresh(); });
         document.getElementById("goalUp").addEventListener("click", () => { setReadingGoal(getReadingGoal() + 1); refresh(); });
+        document.getElementById("historyFilter").addEventListener("change", refresh);
 
         // ---- Day-wise auto-update ----
         // Keeps "Due in Xd" / "overdue" status accurate as days pass,

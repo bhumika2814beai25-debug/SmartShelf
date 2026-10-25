@@ -31,3 +31,39 @@ Then open `http://localhost:8000`.
 - Choose **Librarian** on the sign-in screen.
 
 Student and Staff accounts can be created from the sign-up page.
+
+## JavaScript functionality upgrade
+This version makes JavaScript the main functional layer of SmartShelf instead of using it only for basic interactions.
+
+### New working JavaScript features
+- Search autocomplete with live book suggestions
+- Dynamic catalog search, filters, sorting and result counts
+- Borrow / return logic with live copy availability
+- ₹5-per-day overdue fine calculation with dashboard totals
+- FIFO-style reservation queue with queue positions and ready-to-borrow alerts
+- Student ratings and reviews stored in localStorage, with live average ratings
+- Borrowing-history filters for returned, all and overdue records
+- Smart dashboard alerts for due-soon, overdue, fines and reservation readiness
+- Personalized recommendations and recently viewed history
+- Adjustable reading-goal progress
+- Admin live search and genre filtering
+- Admin analytics for active loans, overdue loans, outstanding fines, most-borrowed title and top genre
+- Client-side validation for catalog edits
+
+All new state is persisted through localStorage so the functionality survives page refreshes in the same browser profile.
+
+
+## SmartShelf v2 JavaScript Enhancements
+
+New interactive features added for the final submission:
+- Promises in three visible workflows: asynchronous catalog loading, borrowing, and dashboard Promise.all loading.
+- Voice search (Web Speech API; supported browsers such as Chrome/Edge).
+- Book comparison for 2–3 selected catalog titles.
+- Ctrl/Cmd + K command palette.
+- Undo for wishlist changes.
+- Auto-saved review drafts.
+- Reading activity streak and achievement badges.
+- Surprise Me preference-aware random book picker.
+- Last five recent searches.
+- Admin catalog activity log with timestamps.
+- Existing JavaScript upgrades remain: overdue fines, reservation queue, ratings/reviews, autocomplete, dashboard history filters, and admin analytics.
